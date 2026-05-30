@@ -84,7 +84,6 @@ async function loadBytes(bytes, name) {
   log(`loadFile 응답: pageCount=${result?.pageCount}`);
   currentFile.name = name;
   $('fileName').textContent = name;
-  const _guard = $('viewerGuard'); if (_guard) _guard.style.display = 'block';  // 뷰어 보호막 표시(편집 차단)
   const _save = $('btnSave'); if (_save) _save.disabled = false;  // 뷰어 모드: 저장 버튼 없음
   const _edit = $('btnEditHwp'); if (_edit) _edit.disabled = !currentFile.driveId;  // 드라이브 파일만 한글로 편집 가능
   setStatus(`"${name}" 열림 (${result.pageCount}페이지)`);

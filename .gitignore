@@ -11,5 +11,6 @@ node_modules/
 
 # Windows/구글드라이브 시스템 파일
 desktop.ini
+**/desktop.ini
 Thumbs.db
 .DS_Store

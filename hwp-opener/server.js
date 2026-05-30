@@ -42,7 +42,16 @@ http.createServer((req, res) => {
     const root = findDriveRoot();
     if (!root) { res.writeHead(500); res.end('드라이브 루트를 못 찾음 (Drive for desktop 확인)'); return; }
     const full = path.join(root, rel);
-    if (!fs.existsSync(full)) { res.writeHead(404); res.end('파일 없음: ' + full); return; }
+    console.log('── 열기 시도 ──');
+    console.log('  받은 상대경로:', rel);
+    console.log('  조합한 전체경로:', full);
+    if (!fs.existsSync(full)) {
+      console.log('  결과: ❌ 파일 없음');
+      // 어디서 어긋났는지: 루트 바로 아래 폴더/파일 목록을 보여줌
+      try { console.log('  참고) 루트 안 항목:', fs.readdirSync(root).slice(0, 30).join(' | ')); } catch (_) {}
+      res.writeHead(404); res.end('파일 없음: ' + full); return;
+    }
+    console.log('  결과: ✅ 존재함 → 한글로 엽니다');
     try {
       // 연결 프로그램(한글)으로 열기 — start "" "경로"
       spawn('cmd', ['/c', 'start', '""', `"${full}"`], { windowsVerbatimArguments: true, stdio: 'ignore' });

@@ -85,6 +85,7 @@ async function loadBytes(bytes, name) {
   currentFile.name = name;
   $('fileName').textContent = name;
   const _save = $('btnSave'); if (_save) _save.disabled = false;  // 뷰어 모드: 저장 버튼 없음
+  const _edit = $('btnEditHwp'); if (_edit) _edit.disabled = !currentFile.driveId;  // 드라이브 파일만 한글로 편집 가능
   setStatus(`"${name}" 열림 (${result.pageCount}페이지)`);
 }
 
@@ -253,6 +254,46 @@ async function openFromDrive(fileId) {
   await loadBytes(new Uint8Array(buf), meta.name || 'document.hwp');
 }
 
+// ── 드라이브 파일 정보 조회 (이름/부모폴더) ──
+async function driveGet(fileId, fields) {
+  await ensureToken();
+  const r = await fetch(
+    `https://www.googleapis.com/drive/v3/files/${fileId}?fields=${encodeURIComponent(fields)}&supportsAllDrives=true`,
+    { headers: { Authorization: 'Bearer ' + accessToken } }
+  );
+  if (!r.ok) throw new Error('파일 정보 조회 실패: ' + r.status);
+  return r.json();
+}
+
+// ── 파일 ID → Drive for desktop 로컬 경로 (H:\내 드라이브\...) ──
+// 부모 폴더를 루트까지 따라 올라가 경로를 만든다. (현재는 "내 드라이브"만; 공유 드라이브는 추후)
+async function buildLocalPath(fileId) {
+  const segs = [];
+  let id = fileId;
+  for (let i = 0; i < 50; i++) {
+    const meta = await driveGet(id, 'name,parents');
+    if (!meta.parents || !meta.parents.length) break;  // 루트 도달 — 루트명은 아래 prefix로 대체
+    segs.unshift(meta.name);
+    id = meta.parents[0];
+  }
+  return 'H:\\내 드라이브\\' + segs.join('\\');
+}
+
+// ── "한글로 편집": 로컬 경로를 클립보드에 복사 (1단계 — 무설치 검증) ──
+async function copyEditPath() {
+  if (!currentFile.driveId) { setStatus('드라이브에서 연 파일만 한글로 편집할 수 있어요', true); return; }
+  try {
+    setStatus('파일 경로 확인 중…', true);
+    const path = await buildLocalPath(currentFile.driveId);
+    await navigator.clipboard.writeText(path);
+    log('로컬 경로: ' + path);
+    setStatus('경로 복사됨 ✅ 탐색기 주소창(Ctrl+L)에 붙여넣고 Enter → 한글로 열립니다', true);
+  } catch (e) {
+    log('경로 복사 실패: ' + e.message, true);
+    setStatus('경로 복사 실패: ' + e.message, true);
+  }
+}
+
 // ── 4) 저장 ──
 async function save() {
   if (!editor) return;
@@ -316,6 +357,7 @@ $('btnOpenLocal2')?.addEventListener('click', openLocalPicker);
 // 뷰어 모드: 저장·로그인 버튼은 UI에서 제거됨 (로그인은 "드라이브에서 열기" 시 자동 처리).
 // 저장 기능 코드(save 함수)는 편집 모드 복구를 위해 남겨둠.
 $('btnSave')?.addEventListener('click', save);
+$('btnEditHwp')?.addEventListener('click', copyEditPath);
 $('btnLogin')?.addEventListener('click', async () => {
   log('구글 로그인 시도…');
   try {

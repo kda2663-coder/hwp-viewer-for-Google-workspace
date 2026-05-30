@@ -13,17 +13,18 @@ const PORT = 17654;
 const ALLOW_ORIGIN = 'https://hwp-drive-sync.web.app';
 
 // Drive for desktop 루트 자동 탐지 (드라이브 문자/이름이 PC마다 달라도 찾음)
-// 루트 폴더 이름이 아래에 없으면 여기에 추가하세요.
+// 계정이 여러 개면 드라이브 루트도 여러 개(G:, H: 등) — 전부 후보로 모은다.
 const ROOT_NAMES = ['내 드라이브', 'My Drive'];
-function findDriveRoot() {
-  const letters = 'GHDEFIJKLMNOPQRSTUVWXYZ'.split('');
+function findDriveRoots() {
+  const roots = [];
+  const letters = 'CDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
   for (const L of letters) {
     for (const n of ROOT_NAMES) {
       const root = L + ':\\' + n;
-      try { if (fs.statSync(root).isDirectory()) return root; } catch (_) { /* 없는 드라이브 무시 */ }
+      try { if (fs.statSync(root).isDirectory()) roots.push(root); } catch (_) { /* 없는 드라이브 무시 */ }
     }
   }
-  return null;
+  return roots;
 }
 
 http.createServer((req, res) => {
@@ -34,24 +35,30 @@ http.createServer((req, res) => {
 
   if (u.pathname === '/ping') { res.writeHead(200); res.end('ok'); return; }
 
-  if (u.pathname === '/root') { res.writeHead(200); res.end(findDriveRoot() || ''); return; }
+  if (u.pathname === '/root') { res.writeHead(200); res.end(findDriveRoots().join(' | ')); return; }
 
   if (u.pathname === '/open') {
     const rel = (u.query.rel || '').toString();
     if (!/\.hwpx?$/i.test(rel)) { res.writeHead(400); res.end('hwp/hwpx만 지원'); return; }
-    const root = findDriveRoot();
-    if (!root) { res.writeHead(500); res.end('드라이브 루트를 못 찾음 (Drive for desktop 확인)'); return; }
-    const full = path.join(root, rel);
+    const roots = findDriveRoots();
+    if (!roots.length) { res.writeHead(500); res.end('드라이브 루트를 못 찾음 (Drive for desktop 확인)'); return; }
+    // 여러 드라이브(계정)가 있으면, 파일이 실제로 있는 루트를 찾는다.
     console.log('── 열기 시도 ──');
     console.log('  받은 상대경로:', rel);
-    console.log('  조합한 전체경로:', full);
-    if (!fs.existsSync(full)) {
-      console.log('  결과: ❌ 파일 없음');
-      // 어디서 어긋났는지: 루트 바로 아래 폴더/파일 목록을 보여줌
-      try { console.log('  참고) 루트 안 항목:', fs.readdirSync(root).slice(0, 30).join(' | ')); } catch (_) {}
-      res.writeHead(404); res.end('파일 없음: ' + full); return;
+    console.log('  후보 루트:', roots.join(' | '));
+    let full = null;
+    for (const root of roots) {
+      const cand = path.join(root, rel);
+      if (fs.existsSync(cand)) { full = cand; break; }
     }
-    console.log('  결과: ✅ 존재함 → 한글로 엽니다');
+    if (!full) {
+      console.log('  결과: ❌ 어느 드라이브에서도 파일 없음');
+      for (const root of roots) {
+        try { console.log('  · ' + root + ' 안 항목:', fs.readdirSync(root).slice(0, 30).join(' | ')); } catch (_) {}
+      }
+      res.writeHead(404); res.end('파일 없음 (후보: ' + roots.map(r => path.join(r, rel)).join(' , ') + ')'); return;
+    }
+    console.log('  찾음:', full, '→ 한글로 엽니다');
     try {
       // 연결 프로그램(한글)으로 열기 — start "" "경로"
       spawn('cmd', ['/c', 'start', '""', `"${full}"`], { windowsVerbatimArguments: true, stdio: 'ignore' });
@@ -66,10 +73,10 @@ http.createServer((req, res) => {
 
   res.writeHead(404); res.end();
 }).listen(PORT, '127.0.0.1', () => {
-  const root = findDriveRoot();
+  const roots = findDriveRoots();
   console.log('==============================================');
   console.log(' 한글 열기 도우미 실행 중 — http://127.0.0.1:' + PORT);
-  console.log(' 드라이브 루트:', root || '(못 찾음 — 아래 ROOT_NAMES 확인 필요)');
+  console.log(' 드라이브 루트:', roots.length ? roots.join(' | ') : '(못 찾음 — Drive for desktop 확인)');
   console.log(' 이 창을 열어둔 채로 웹앱에서 "한글로 편집"을 누르세요.');
   console.log('==============================================');
 });

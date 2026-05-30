@@ -10,7 +10,7 @@ const CONFIG = {
   CLIENT_ID: '442438589836-5eqnquabmics5sbim9fnf5dqu2cjl3hv.apps.googleusercontent.com',
   API_KEY: 'AIzaSyBcqOIvVquz0EMGzGVc7bxtWOlY-Rzx8f0',  // Picker용 (Google Picker API로 제한됨)
   APP_ID: '442438589836', // 프로젝트 번호 (클라이언트 ID 앞부분) — Picker가 고른 파일을 우리 앱에 연결하는 데 필요
-  SCOPE: 'https://www.googleapis.com/auth/drive.file', // 내 앱으로 연 파일만 접근
+  SCOPE: 'https://www.googleapis.com/auth/drive.readonly', // 뷰어: 볼 수 있는 파일 읽기 전용
 };
 // ───────────────────────────────────────────────────────────
 
@@ -41,7 +41,6 @@ let accessToken = null;  // 구글 액세스 토큰
 let tokenClient = null;  // GIS 토큰 발급기
 let currentFile = {      // 현재 열린 문서 정보
   driveId: null,         // 드라이브 파일 ID (드라이브에서 연 경우)
-  extId: null,           // 확장프로그램으로 연 경우, 그 확장 ID (저장도 확장에 위임)
   name: 'document.hwp',
 };
 
@@ -98,8 +97,7 @@ $('fileInput').addEventListener('change', async (e) => {
   if (!file) return;
   try {
     const buf = await file.arrayBuffer();
-    currentFile.driveId = null; // 로컬 파일은 드라이브 ID 없음 → 저장 시 다운로드
-    currentFile.extId = null;
+    currentFile.driveId = null; // 로컬 파일은 드라이브 ID 없음
     await loadBytes(new Uint8Array(buf), file.name);
   } catch (err) {
     setStatus('열기 실패: ' + err.message);
@@ -214,7 +212,6 @@ async function openFromDrive(fileId) {
   }
   const buf = await dataResp.arrayBuffer();
   currentFile.driveId = fileId;
-  currentFile.extId = null;
   await loadBytes(new Uint8Array(buf), meta.name || 'document.hwp');
 }
 
@@ -227,12 +224,7 @@ async function save() {
     const bytes = await editor.exportHwp();
     log(`exportHwp 완료: ${bytes.length} bytes`);
 
-    if (currentFile.extId && currentFile.driveId) {
-      // 확장프로그램으로 연 파일 → 저장도 확장에 위임 (확장이 드라이브에 업로드)
-      setStatus('드라이브에 저장 중…', true);
-      await extSend(currentFile.extId, { cmd: 'upload', fileId: currentFile.driveId, bytes: Array.from(bytes) });
-      setStatus('드라이브에 저장 완료 ✅');
-    } else if (currentFile.driveId) {
+    if (currentFile.driveId) {
       // 드라이브에서 연 파일 → 드라이브에 덮어쓰기
       await ensureToken();
       setStatus('드라이브에 저장 중…', true);
@@ -314,28 +306,7 @@ function showDriveOpenPrompt(fileId) {
   document.getElementById('btnDriveOpen').addEventListener('click', run);
 }
 
-// ── 확장프로그램과 통신 (외부 페이지 → 확장) ──
-function extSend(extId, msg) {
-  return new Promise((resolve, reject) => {
-    if (!window.chrome?.runtime?.sendMessage) { reject(new Error('확장프로그램을 찾을 수 없어요')); return; }
-    chrome.runtime.sendMessage(extId, msg, (resp) => {
-      if (chrome.runtime.lastError) { reject(new Error(chrome.runtime.lastError.message)); return; }
-      if (resp?.error) { reject(new Error(resp.error)); return; }
-      resolve(resp);
-    });
-  });
-}
-
-// ── 확장프로그램이 드라이브 파일을 넘겨준 경우: 확장에 바이트 요청 → 편집기에 열기 ──
-async function openFromExtension(fileId, extId) {
-  hideWelcome();
-  setStatus('드라이브에서 파일 가져오는 중…', true);
-  log(`확장 통해 다운로드 요청: ${fileId}`);
-  const resp = await extSend(extId, { cmd: 'download', fileId });
-  currentFile.driveId = fileId;
-  currentFile.extId = extId;
-  await loadBytes(new Uint8Array(resp.bytes), resp.name || 'document.hwp');
-}
+// ── 확장(B)·연결앱(A) 모두 fileId만 웹앱에 넘김 → 웹앱이 직접 다운로드(openFromDrive) ──
 
 // ── 시작 ──
 (async () => {
@@ -354,17 +325,7 @@ async function openFromExtension(fileId, extId) {
     return;
   }
 
-  if (params.get('source') === 'ext') {
-    // 확장프로그램이 연 경우
-    const fileId = params.get('fileId');
-    const extId = params.get('extId');
-    if (fileId && extId) {
-      openFromExtension(fileId, extId).catch((err) => {
-        setStatus('열기 실패: ' + err.message, true); log('확장 열기 실패: ' + err.message, true);
-      });
-    }
-    return;
-  }
-  const fileId = getDriveFileIdFromUrl();
-  if (fileId) showDriveOpenPrompt(fileId);  // 드라이브 연결앱(A)으로 열린 경우: 클릭으로 열기 (팝업 차단 회피)
+  // 확장(B)·연결앱(A) 모두 fileId를 웹앱에 넘김 → 웹앱이 직접 로그인 후 다운로드 (경로 통일)
+  const fileId = params.get('fileId') || getDriveFileIdFromUrl();
+  if (fileId) showDriveOpenPrompt(fileId);  // 클릭 한 번으로 로그인 (자동 팝업 차단 회피)
 })();

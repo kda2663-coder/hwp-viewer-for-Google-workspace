@@ -18,7 +18,13 @@
       "Bash(git init *)",
       "Bash(echo \"done:$?\")",
       "Bash(type C:/gitdb_init.log)",
-      "Read(//c//**)"
+      "Read(//c//**)",
+      "Bash(firebase deploy *)",
+      "Bash(git branch *)",
+      "Bash(git remote *)",
+      "Bash(git push *)",
+      "Bash(node --check app.js)",
+      "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('extension/manifest.json','utf8'\\)\\); console.log\\('manifest.json OK'\\)\")"
     ]
   }
 }

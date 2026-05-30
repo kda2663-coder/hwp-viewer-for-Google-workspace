@@ -8,11 +8,8 @@
   let currentId = null;
 
   function openEditor(id) {
-    window.open(
-      WEBAPP + '?source=ext&fileId=' + encodeURIComponent(id) +
-      '&extId=' + encodeURIComponent(chrome.runtime.id),
-      '_blank'
-    );
+    // 웹앱에 파일 ID만 넘김 — 로그인·다운로드는 웹앱이 처리 (확장 ID와 무관)
+    window.open(WEBAPP + '?source=ext&fileId=' + encodeURIComponent(id), '_blank');
   }
 
   // 고정 버튼 (평소 숨김, hwp 클릭하면 표시)

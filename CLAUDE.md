@@ -1,4 +1,4 @@
-# HWP Editor for Google Workspace — 프로젝트 규칙
+# HWP Viewer for Google Workspace — 프로젝트 규칙
 
 ## ⚠️ 보안 — 이 저장소는 GitHub에 **공개(Public)** 된다
 이 repo는 오픈소스로 공개되므로, 커밋 전 항상 아래를 엄격히 거른다.

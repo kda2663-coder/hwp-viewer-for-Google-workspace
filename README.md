@@ -1,4 +1,4 @@
-# HWP Editor for Google Workspace
+# HWP Viewer for Google Workspace
 
 구글 드라이브의 한글(HWP/HWPX) 문서를 **다운로드 없이 브라우저에서 바로 보는 뷰어**입니다.
 원하면 PC에 설치된 한글 프로그램으로 원본을 바로 열어 편집할 수도 있습니다.

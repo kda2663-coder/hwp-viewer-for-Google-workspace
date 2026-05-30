@@ -14,3 +14,17 @@ desktop.ini
 **/desktop.ini
 Thumbs.db
 .DS_Store
+
+# ── 공개 저장소 제외: 민감/군더더기 (이 repo는 GitHub 공개됨) ──
+# 개인 설정·시크릿 기록
+SETUP.md
+.claude/
+# 업무 문서가 찍힌 스크린샷·샘플 (공개 금지)
+screenshot_*.png
+스크린샷*.png
+*.hwp
+*.hwpx
+# 옛 버전 백업·테스트 잔여물
+_backup/
+svg-test.html
+demo_screenshot.html

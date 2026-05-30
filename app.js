@@ -266,26 +266,43 @@ async function driveGet(fileId, fields) {
   return r.json();
 }
 
+// ── 공유 드라이브 실제 이름 조회 (drives.get — 파일 API와 별개 엔드포인트) ──
+async function driveNameOf(driveId) {
+  await ensureToken();
+  const r = await fetch(
+    `https://www.googleapis.com/drive/v3/drives/${driveId}?fields=name`,
+    { headers: { Authorization: 'Bearer ' + accessToken } }
+  );
+  if (!r.ok) throw new Error('공유 드라이브 정보 조회 실패: ' + r.status);
+  return (await r.json()).name;
+}
+
 // ── 파일 ID → 드라이브 문자 이후 전체 경로 ──
-// 부모 폴더를 루트까지 따라 올라간다. 드라이브 문자(G:/H:)는 로컬 도우미가 자동 탐지한다.
-// 내 드라이브: "내 드라이브\..." / 공유 드라이브: "공유 드라이브\<드라이브이름>\..."
+// 부모 폴더를 따라 올라간다. 드라이브 문자(G:/H:)는 로컬 도우미가 자동 탐지한다.
+// 내 드라이브: "내 드라이브\폴더\...\파일"
+// 공유 드라이브: "공유 드라이브\<드라이브이름>\폴더\...\파일"
 async function buildRelPath(fileId) {
-  const segs = [];
-  let id = fileId;
-  let isShared = false;
-  for (let i = 0; i < 50; i++) {
-    const fields = i === 0 ? 'name,parents,driveId' : 'name,parents';
-    const meta = await driveGet(id, fields);
-    if (i === 0) isShared = !!meta.driveId;        // 공유 드라이브 소속 여부
-    if (!meta.parents || !meta.parents.length) {
-      if (isShared) segs.unshift(meta.name);       // 공유 드라이브 루트 = 그 드라이브 이름
-      break;                                        // 내 드라이브 루트 이름은 prefix로 대체
-    }
+  const first = await driveGet(fileId, 'name,parents,driveId');
+  const isShared = !!first.driveId;
+  const segs = [first.name];
+  let parents = first.parents;
+
+  for (let i = 0; i < 50 && parents && parents.length; i++) {
+    const pid = parents[0];
+    // 공유 드라이브 루트(=driveId)에 닿으면 멈춤 — 드라이브 자체는 파일로 조회 안 함
+    if (isShared && pid === first.driveId) break;
+    const meta = await driveGet(pid, 'name,parents');
+    // 내 드라이브 루트(부모 없음)에 닿으면 멈춤 — 루트 이름은 prefix로 대체
+    if (!meta.parents || !meta.parents.length) break;
     segs.unshift(meta.name);
-    id = meta.parents[0];
+    parents = meta.parents;
   }
-  const prefix = isShared ? '공유 드라이브' : '내 드라이브';
-  return prefix + '\\' + segs.join('\\');
+
+  if (isShared) {
+    const driveName = await driveNameOf(first.driveId);  // 공유 드라이브 실제 이름
+    return '공유 드라이브\\' + driveName + '\\' + segs.join('\\');
+  }
+  return '내 드라이브\\' + segs.join('\\');
 }
 
 // ── "한글로 편집" ──

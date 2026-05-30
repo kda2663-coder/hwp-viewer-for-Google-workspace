@@ -24,7 +24,15 @@
       "Bash(git remote *)",
       "Bash(git push *)",
       "Bash(node --check app.js)",
-      "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('extension/manifest.json','utf8'\\)\\); console.log\\('manifest.json OK'\\)\")"
+      "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('extension/manifest.json','utf8'\\)\\); console.log\\('manifest.json OK'\\)\")",
+      "PowerShell($src = \"h:\\\\내 드라이브\\\\00. 테스트\\\\12.HWP-google\\\\extension\"; $dst = \"C:\\\\Users\\\\thekp\\\\Desktop\\\\hwp-ext-test\"; if \\(Test-Path $dst\\) { Remove-Item $dst -Recurse -Force }; Copy-Item $src $dst -Recurse; Write-Output \"복사 완료: $dst\"; Write-Output \"--- 내용 ---\"; Get-ChildItem $dst -Recurse -Name)",
+      "PowerShell($dst = \"C:\\\\Users\\\\thekp\\\\Desktop\\\\hwp-ext-test\"; Write-Output \"폴더 존재? $\\(Test-Path $dst\\)\"; $src = \"h:\\\\내 드라이브\\\\00. 테스트\\\\12.HWP-google\\\\extension\"; if \\(Test-Path $dst\\) { Remove-Item $dst -Recurse -Force }; Copy-Item $src $dst -Recurse; Write-Output \"재복사 완료: $dst\"; Get-ChildItem $dst -Name)",
+      "PowerShell($a = \"h:\\\\내 드라이브\\\\00. 테스트\\\\12.HWP-google\\\\extension\\\\content.js\"; $b = \"C:\\\\Users\\\\thekp\\\\Desktop\\\\hwp-ext-test\\\\content.js\"; $ha = \\(Get-FileHash $a -Algorithm MD5\\).Hash; $hb = \\(Get-FileHash $b -Algorithm MD5\\).Hash; Write-Output \"원본\\(드라이브\\): $ha\"; Write-Output \"복사본\\(C드라이브\\): $hb\"; Write-Output \"동일? $\\($ha -eq $hb\\)\"; Write-Output \"--- 둘 다 a태그/위치 확인 ---\"; Select-String -Path $a,$b -Pattern \"createElement\\\\\\('a'\\\\\\)|top:80px\" | ForEach-Object { \"$\\($_.Filename\\): $\\($_.Line.Trim\\(\\)\\)\" })",
+      "PowerShell($stage = \"C:\\\\Users\\\\thekp\\\\Desktop\\\\hwp-viewer\"; $src = \"h:\\\\내 드라이브\\\\00. 테스트\\\\12.HWP-google\\\\extension\"; $zip = \"C:\\\\Users\\\\thekp\\\\Desktop\\\\hwp-viewer.zip\"; if \\(Test-Path $stage\\) { Remove-Item $stage -Recurse -Force }; New-Item -ItemType Directory -Path $stage | Out-Null; Copy-Item \"$src\\\\manifest.json\" $stage; Copy-Item \"$src\\\\content.js\" $stage; Copy-Item \"$src\\\\icons\" $stage -Recurse; if \\(Test-Path $zip\\) { Remove-Item $zip -Force }; Compress-Archive -Path $stage -DestinationPath $zip; Write-Output \"배포용 zip 생성: $zip\"; Write-Output \"--- zip 안 구성 ---\"; Get-ChildItem $stage -Recurse -Name)",
+      "PowerShell($stage = \"C:\\\\Users\\\\thekp\\\\Desktop\\\\hwp-viewer\"; Write-Output \"=== 스테이징 폴더 최상위 ===\"; \\(Get-ChildItem $stage | Select-Object -ExpandProperty Name\\) -join \", \"; Write-Output \"=== icons ===\"; \\(Get-ChildItem \"$stage\\\\icons\" | Select-Object -ExpandProperty Name\\) -join \", \"; Write-Output \"=== background.js 있나? ===\"; Test-Path \"$stage\\\\background.js\"; Write-Output \"=== zip 크기 ===\"; \\(Get-Item \"C:\\\\Users\\\\thekp\\\\Desktop\\\\hwp-viewer.zip\"\\).Length)"
+    ],
+    "additionalDirectories": [
+      "h:\\�� ����̺�\\00. �׽�Ʈ\\12.HWP-google\\extension"
     ]
   }
 }

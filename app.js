@@ -116,8 +116,35 @@ function waitForGoogle() {
   });
 }
 
+// ── 로그인 토큰 캐시 (새 탭에서도 약 1시간 재사용 → 매번 로그인 안 해도 됨) ──
+const TOKEN_KEY = 'hwp_tok', EXP_KEY = 'hwp_tok_exp', CONSENT_KEY = 'hwp_consented';
+function loadCachedToken() {
+  try {
+    const t = localStorage.getItem(TOKEN_KEY);
+    const exp = parseInt(localStorage.getItem(EXP_KEY) || '0', 10);
+    if (t && exp && Date.now() < exp) return t;
+  } catch { /* localStorage 차단 환경 무시 */ }
+  return null;
+}
+function saveToken(t, expiresInSec) {
+  try {
+    localStorage.setItem(TOKEN_KEY, t);
+    localStorage.setItem(EXP_KEY, String(Date.now() + (Math.max(expiresInSec, 120) - 60) * 1000));
+    localStorage.setItem(CONSENT_KEY, '1');
+  } catch { /* 무시 */ }
+}
+function clearToken() {
+  accessToken = null;
+  try { localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(EXP_KEY); } catch { /* 무시 */ }
+}
+function hasConsented() {
+  try { return localStorage.getItem(CONSENT_KEY) === '1'; } catch { return false; }
+}
+
 async function ensureToken() {
   if (accessToken) return accessToken;
+  const cached = loadCachedToken();
+  if (cached) { accessToken = cached; return accessToken; }  // 저장된 토큰 재사용 → 로그인 생략
   if (!CONFIG.CLIENT_ID) {
     setStatus('아직 구글 클라이언트 ID가 설정되지 않았어요 (app.js의 CONFIG)', true);
     throw new Error('CLIENT_ID 미설정');
@@ -127,16 +154,23 @@ async function ensureToken() {
     tokenClient = google.accounts.oauth2.initTokenClient({
       client_id: CONFIG.CLIENT_ID,
       scope: CONFIG.SCOPE,
-      callback: () => {}, // 아래 requestToken에서 매번 교체
+      callback: () => {}, // 아래에서 매번 교체
     });
   }
   return new Promise((resolve, reject) => {
+    let triedConsent = false;
     tokenClient.callback = (resp) => {
-      if (resp.error) { reject(new Error(resp.error)); return; }
+      if (resp.error) {
+        // 조용한 갱신 실패 → 동의 창으로 한 번만 재시도
+        if (!triedConsent) { triedConsent = true; tokenClient.requestAccessToken({ prompt: 'consent' }); return; }
+        reject(new Error(resp.error)); return;
+      }
       accessToken = resp.access_token;
+      saveToken(accessToken, resp.expires_in || 3600);
       resolve(accessToken);
     };
-    tokenClient.requestAccessToken({ prompt: accessToken ? '' : 'consent' });
+    // 한 번이라도 동의했으면 조용히(창 없이), 처음이면 동의 창
+    tokenClient.requestAccessToken({ prompt: hasConsented() ? '' : 'consent' });
   });
 }
 
@@ -327,5 +361,12 @@ function showDriveOpenPrompt(fileId) {
 
   // 확장(B)·연결앱(A) 모두 fileId를 웹앱에 넘김 → 웹앱이 직접 로그인 후 다운로드 (경로 통일)
   const fileId = params.get('fileId') || getDriveFileIdFromUrl();
-  if (fileId) showDriveOpenPrompt(fileId);  // 클릭 한 번으로 로그인 (자동 팝업 차단 회피)
+  if (fileId) {
+    if (loadCachedToken()) {
+      // 저장된 로그인이 있으면 클릭·로그인 없이 바로 열기
+      openFromDrive(fileId).catch(() => { clearToken(); showDriveOpenPrompt(fileId); });
+    } else {
+      showDriveOpenPrompt(fileId);  // 처음엔 클릭 한 번으로 로그인 (자동 팝업 차단 회피)
+    }
+  }
 })();

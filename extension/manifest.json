@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "HWP Editor for Google Workspace",
+  "version": "0.1.0",
+  "description": "구글 드라이브의 한글(HWP/HWPX) 문서를 브라우저에서 바로 열어 봅니다.",
+  "permissions": ["identity"],
+  "host_permissions": [
+    "https://www.googleapis.com/*"
+  ],
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [
+    {
+      "matches": ["https://drive.google.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "externally_connectable": {
+    "matches": ["https://hwp-drive-sync.web.app/*"]
+  },
+  "oauth2": {
+    "client_id": "442438589836-32a95aqo7d21h16uq5uv4680m35atnv6.apps.googleusercontent.com",
+    "scopes": ["https://www.googleapis.com/auth/drive"]
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_title": "한글 드라이브 뷰어"
+  }
+}

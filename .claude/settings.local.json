@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -sL \"https://esm.sh/@rhwp/editor@0.7.13\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://esm.sh/@rhwp/editor@0.7.13\")",
+      "PowerShell($dst = \"h:\\\\내 드라이브\\\\00. 테스트\\\\12.HWP-google\\\\extension\\\\icons\"; New-Item -ItemType Directory -Force $dst | Out-Null; $src = \"h:\\\\내 드라이브\\\\00. 테스트\\\\12.HWP-google\\\\icons\"; foreach \\($n in 16,48,128\\) { Copy-Item \"$src\\\\icon-$n.png\" \"$dst\\\\icon-$n.png\" -Force }; Get-ChildItem $dst | Select-Object Name)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:esm.sh)",
+      "WebFetch(domain:hwp-drive-sync.web.app)",
+      "Bash(cd \"h:/내 드라이브/00. 테스트/12.HWP-google/_backup/edit-version-20260530\"; stat -c '%n %s bytes' app.js index.html extension/content.js)",
+      "Read(//h/내 드라이브/00. 테스트/12.HWP-google/_backup/edit-version-20260530/**)",
+      "Bash(gh auth *)",
+      "Bash(git config *)",
+      "Bash(gh --version)",
+      "PowerShell($g = Get-Command gh -ErrorAction SilentlyContinue; if \\($g\\) { \"gh found: $\\($g.Source\\)\" } else { \"gh NOT FOUND\" })",
+      "Bash(echo \"EXIT:$?\")",
+      "PowerShell(\"PS-OUTPUT-MARKER-12345\")",
+      "Bash(git init *)",
+      "Bash(echo \"done:$?\")",
+      "Bash(type C:/gitdb_init.log)",
+      "Read(//c//**)"
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "mcp__claude_ai_Google_Drive__read_file_content",
+      "mcp__claude_ai_Google_Drive__search_files",
+      "mcp__claude_ai_Google_Drive__get_file_metadata",
+      "Bash(curl -s -o /dev/null -w \"localhost:8080 → HTTP %{http_code}\\\\n\" http://localhost:8080/)"
+    ]
+  }
+}

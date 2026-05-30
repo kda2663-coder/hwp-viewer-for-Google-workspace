@@ -1,0 +1,10 @@
+# 개인 기록 (이메일 등 개인정보 포함) — 공개 저장소에 올리지 않음
+SETUP.md
+
+# 로그·임시 파일
+*.log
+firebase-debug.log
+.firebase/
+
+# 의존성
+node_modules/

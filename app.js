@@ -122,8 +122,9 @@ function loadCachedToken() {
   try {
     const t = localStorage.getItem(TOKEN_KEY);
     const exp = parseInt(localStorage.getItem(EXP_KEY) || '0', 10);
-    if (t && exp && Date.now() < exp) return t;
-  } catch { /* localStorage 차단 환경 무시 */ }
+    if (t && exp && Date.now() < exp) { log('캐시 토큰 사용 (남은 ' + Math.round((exp - Date.now()) / 1000) + 's)'); return t; }
+    log('캐시 토큰 없음/만료 (있음=' + !!t + ', 만료시각=' + exp + ', 지금=' + Date.now() + ')');
+  } catch (e) { log('localStorage 읽기 실패: ' + e.message, true); }
   return null;
 }
 function saveToken(t, expiresInSec) {
@@ -131,7 +132,8 @@ function saveToken(t, expiresInSec) {
     localStorage.setItem(TOKEN_KEY, t);
     localStorage.setItem(EXP_KEY, String(Date.now() + (Math.max(expiresInSec, 120) - 60) * 1000));
     localStorage.setItem(CONSENT_KEY, '1');
-  } catch { /* 무시 */ }
+    log('토큰 저장됨 (expires_in=' + expiresInSec + 's)');
+  } catch (e) { log('localStorage 저장 실패: ' + e.message, true); }
 }
 function clearToken() {
   accessToken = null;
@@ -170,7 +172,9 @@ async function ensureToken() {
       resolve(accessToken);
     };
     // 한 번이라도 동의했으면 조용히(창 없이), 처음이면 동의 창
-    tokenClient.requestAccessToken({ prompt: hasConsented() ? '' : 'consent' });
+    const p = hasConsented() ? '' : 'consent';
+    log('토큰 요청 (prompt="' + p + '", 동의이력=' + hasConsented() + ')');
+    tokenClient.requestAccessToken({ prompt: p });
   });
 }
 

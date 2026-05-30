@@ -31,7 +31,8 @@
       "PowerShell($stage = \"C:\\\\Users\\\\thekp\\\\Desktop\\\\hwp-viewer\"; $src = \"h:\\\\내 드라이브\\\\00. 테스트\\\\12.HWP-google\\\\extension\"; $zip = \"C:\\\\Users\\\\thekp\\\\Desktop\\\\hwp-viewer.zip\"; if \\(Test-Path $stage\\) { Remove-Item $stage -Recurse -Force }; New-Item -ItemType Directory -Path $stage | Out-Null; Copy-Item \"$src\\\\manifest.json\" $stage; Copy-Item \"$src\\\\content.js\" $stage; Copy-Item \"$src\\\\icons\" $stage -Recurse; if \\(Test-Path $zip\\) { Remove-Item $zip -Force }; Compress-Archive -Path $stage -DestinationPath $zip; Write-Output \"배포용 zip 생성: $zip\"; Write-Output \"--- zip 안 구성 ---\"; Get-ChildItem $stage -Recurse -Name)",
       "PowerShell($stage = \"C:\\\\Users\\\\thekp\\\\Desktop\\\\hwp-viewer\"; Write-Output \"=== 스테이징 폴더 최상위 ===\"; \\(Get-ChildItem $stage | Select-Object -ExpandProperty Name\\) -join \", \"; Write-Output \"=== icons ===\"; \\(Get-ChildItem \"$stage\\\\icons\" | Select-Object -ExpandProperty Name\\) -join \", \"; Write-Output \"=== background.js 있나? ===\"; Test-Path \"$stage\\\\background.js\"; Write-Output \"=== zip 크기 ===\"; \\(Get-Item \"C:\\\\Users\\\\thekp\\\\Desktop\\\\hwp-viewer.zip\"\\).Length)",
       "PowerShell($src = \"h:\\\\내 드라이브\\\\00. 테스트\\\\12.HWP-google\\\\extension\"; $stage = \"C:\\\\Users\\\\thekp\\\\Desktop\\\\hwp-viewer\"; $zip = \"C:\\\\Users\\\\thekp\\\\Desktop\\\\hwp-viewer.zip\"; Copy-Item \"$src\\\\사용법.txt\" $stage -Force; if \\(Test-Path $zip\\) { Remove-Item $zip -Force }; Compress-Archive -Path $stage -DestinationPath $zip; Write-Output \"zip 재생성 완료\"; Write-Output \"--- zip 폴더 구성 ---\"; \\(Get-ChildItem $stage | Select-Object -ExpandProperty Name\\) -join \", \")",
-      "Bash(git rm *)"
+      "Bash(git rm *)",
+      "Bash(node --check hwp-opener/server.js)"
     ],
     "additionalDirectories": [
       "h:\\�� ����̺�\\00. �׽�Ʈ\\12.HWP-google\\extension"

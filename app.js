@@ -265,32 +265,44 @@ async function driveGet(fileId, fields) {
   return r.json();
 }
 
-// ── 파일 ID → Drive for desktop 로컬 경로 (H:\내 드라이브\...) ──
-// 부모 폴더를 루트까지 따라 올라가 경로를 만든다. (현재는 "내 드라이브"만; 공유 드라이브는 추후)
-async function buildLocalPath(fileId) {
+// ── 파일 ID → 드라이브 루트 이후 상대경로 (예: 폴더\파일.hwp) ──
+// 부모 폴더를 루트까지 따라 올라간다. 루트(드라이브 문자/이름)는 로컬 도우미가 자동 탐지한다.
+// (현재는 "내 드라이브"만; 공유 드라이브는 추후)
+async function buildRelPath(fileId) {
   const segs = [];
   let id = fileId;
   for (let i = 0; i < 50; i++) {
     const meta = await driveGet(id, 'name,parents');
-    if (!meta.parents || !meta.parents.length) break;  // 루트 도달 — 루트명은 아래 prefix로 대체
+    if (!meta.parents || !meta.parents.length) break;  // 루트 도달
     segs.unshift(meta.name);
     id = meta.parents[0];
   }
-  return 'H:\\내 드라이브\\' + segs.join('\\');
+  return segs.join('\\');
 }
 
-// ── "한글로 편집": 로컬 경로를 클립보드에 복사 (1단계 — 무설치 검증) ──
+// ── "한글로 편집" ──
+// 2단계: 로컬 도우미가 켜져 있으면 한글로 자동 실행. 꺼져 있으면 1단계(경로 클립보드 복사)로 폴백.
+const HELPER_URL = 'http://127.0.0.1:17654';
 async function copyEditPath() {
   if (!currentFile.driveId) { setStatus('드라이브에서 연 파일만 한글로 편집할 수 있어요', true); return; }
   try {
-    setStatus('파일 경로 확인 중…', true);
-    const path = await buildLocalPath(currentFile.driveId);
-    await navigator.clipboard.writeText(path);
-    log('로컬 경로: ' + path);
-    setStatus('경로 복사됨 ✅ 탐색기 주소창(Ctrl+L)에 붙여넣고 Enter → 한글로 열립니다', true);
+    setStatus('한글 프로그램으로 여는 중…', true);
+    const rel = await buildRelPath(currentFile.driveId);  // 드라이브 루트 이후 상대경로
+    log('상대경로: ' + rel);
+    let r;
+    try {
+      r = await fetch(HELPER_URL + '/open?rel=' + encodeURIComponent(rel), { mode: 'cors' });
+    } catch (_) {
+      setStatus('도우미가 꺼져 있어요. "한글열기도우미_실행.bat"을 먼저 켜주세요', true);
+      return;
+    }
+    if (r.ok) { setStatus('한글 프로그램으로 여는 중… ✅', true); return; }
+    const msg = await r.text().catch(() => '');
+    log('도우미 응답 오류: ' + r.status + ' ' + msg, true);
+    setStatus('열기 실패: ' + (msg || r.status), true);
   } catch (e) {
-    log('경로 복사 실패: ' + e.message, true);
-    setStatus('경로 복사 실패: ' + e.message, true);
+    log('한글로 편집 실패: ' + e.message, true);
+    setStatus('한글로 편집 실패: ' + e.message, true);
   }
 }
 

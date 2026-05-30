@@ -265,19 +265,26 @@ async function driveGet(fileId, fields) {
   return r.json();
 }
 
-// ── 파일 ID → 드라이브 루트 이후 상대경로 (예: 폴더\파일.hwp) ──
-// 부모 폴더를 루트까지 따라 올라간다. 루트(드라이브 문자/이름)는 로컬 도우미가 자동 탐지한다.
-// (현재는 "내 드라이브"만; 공유 드라이브는 추후)
+// ── 파일 ID → 드라이브 문자 이후 전체 경로 ──
+// 부모 폴더를 루트까지 따라 올라간다. 드라이브 문자(G:/H:)는 로컬 도우미가 자동 탐지한다.
+// 내 드라이브: "내 드라이브\..." / 공유 드라이브: "공유 드라이브\<드라이브이름>\..."
 async function buildRelPath(fileId) {
   const segs = [];
   let id = fileId;
+  let isShared = false;
   for (let i = 0; i < 50; i++) {
-    const meta = await driveGet(id, 'name,parents');
-    if (!meta.parents || !meta.parents.length) break;  // 루트 도달
+    const fields = i === 0 ? 'name,parents,driveId' : 'name,parents';
+    const meta = await driveGet(id, fields);
+    if (i === 0) isShared = !!meta.driveId;        // 공유 드라이브 소속 여부
+    if (!meta.parents || !meta.parents.length) {
+      if (isShared) segs.unshift(meta.name);       // 공유 드라이브 루트 = 그 드라이브 이름
+      break;                                        // 내 드라이브 루트 이름은 prefix로 대체
+    }
     segs.unshift(meta.name);
     id = meta.parents[0];
   }
-  return segs.join('\\');
+  const prefix = isShared ? '공유 드라이브' : '내 드라이브';
+  return prefix + '\\' + segs.join('\\');
 }
 
 // ── "한글로 편집" ──

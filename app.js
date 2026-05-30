@@ -17,6 +17,10 @@ const CONFIG = {
 const $ = (id) => document.getElementById(id);
 const statusEl = $('status');
 
+// 심사 통과 전까지 "한글로 편집"(로컬 도우미 연동) 기능 숨김.
+// 주소에 ?edit=1 이면 노출 — 본인 테스트용. 통과 후엔 이 값을 true로 바꾸면 모두에게 부활.
+const EDIT_ENABLED = new URLSearchParams(location.search).has('edit');
+
 // ── 화면 내 진단 로그 (F12 없이 상태 확인) ──
 function log(msg, isErr = false) {
   const el = $('log');
@@ -85,8 +89,12 @@ async function loadBytes(bytes, name) {
   currentFile.name = name;
   $('fileName').textContent = name;
   const _save = $('btnSave'); if (_save) _save.disabled = false;  // 뷰어 모드: 저장 버튼 없음
-  const _note = $('viewerNote'); if (_note) _note.style.display = 'inline-block';  // 파일 열리면 안내문구 표시
-  const _edit = $('btnEditHwp'); if (_edit) _edit.disabled = !currentFile.driveId;  // 드라이브 파일만 한글로 편집 가능
+  // "한글로 편집"은 심사 통과 전까지 숨김 — 주소에 ?edit=1 일 때만 노출 (통과 후 이 조건만 풀면 부활)
+  const _edit = $('btnEditHwp');
+  if (_edit) {
+    if (EDIT_ENABLED) { _edit.style.display = ''; _edit.disabled = !currentFile.driveId; const _n = $('viewerNote'); if (_n) _n.style.display = 'inline-block'; }
+    else { _edit.style.display = 'none'; }
+  }
   setStatus(`"${name}" 열림 (${result.pageCount}페이지)`);
 }
 

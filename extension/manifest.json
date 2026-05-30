@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "HWP Editor for Google Workspace",
+  "name": "HWP Viewer for Google Workspace",
   "version": "0.2.0",
   "description": "구글 드라이브의 한글(HWP/HWPX) 문서를 브라우저에서 바로 열어 봅니다.",
   "content_scripts": [

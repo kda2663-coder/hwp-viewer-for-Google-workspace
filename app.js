@@ -300,7 +300,7 @@ async function copyEditPath() {
     try {
       r = await fetch(HELPER_URL + '/open?rel=' + encodeURIComponent(rel), { mode: 'cors' });
     } catch (_) {
-      setStatus('도우미가 꺼져 있어요. "한글열기도우미_실행.bat"을 먼저 켜주세요', true);
+      setStatus('로컬 열기 도우미가 꺼져 있어요 — 함께 받은 "설치.bat"을 한 번만 실행하면 이후 버튼만으로 열립니다', true);
       return;
     }
     if (r.ok) { setStatus('한글 프로그램으로 여는 중… ✅', true); return; }

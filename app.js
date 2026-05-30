@@ -471,7 +471,7 @@ function showDriveOpenPrompt(fileId) {
   // 데모 모드: ?demo=1 — 서버의 테스트 hwp 파일 자동 로드 (스크린샷용)
   if (params.get('demo') === '1') {
     try {
-      const resp = await fetch('./%ED%85%8C%EC%8A%A4%ED%8A%B8%EC%9A%A9%20%EC%95%84%EB%AC%B4%EB%A7%90.hwp');
+      const resp = await fetch('./sample.hwp');
       const buf = await resp.arrayBuffer();
       await loadBytes(new Uint8Array(buf), '샘플문서.hwp');
     } catch (err) {

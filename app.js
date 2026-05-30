@@ -292,6 +292,7 @@ async function buildRelPath(fileId) {
 // 로컬 도우미가 켜져 있으면 PC 한글 프로그램으로 자동 실행. 꺼져 있으면 설치 안내 카드 표시.
 const HELPER_URL = 'http://127.0.0.1:17654';
 const HELPER_REPO = 'https://github.com/kda2663-coder/hwp-viewer-for-Google-workspace';
+const HELPER_ZIP = 'https://github.com/kda2663-coder/hwp-viewer-for-Google-workspace/releases/download/v0.1.0/hwp-opener.zip';
 async function copyEditPath() {
   if (!currentFile.driveId) { setStatus('드라이브에서 연 파일만 한글로 편집할 수 있어요', true); return; }
   try {
@@ -327,15 +328,16 @@ function showHelperGuide() {
       '처음 한 번만 아래를 설정하면, 이후엔 “한글로 편집” 버튼만 누르면 됩니다.</p>' +
       '<ol>' +
         '<li><b>Node.js</b> 설치 (한 번만) — <a href="https://nodejs.org/ko" target="_blank" rel="noopener">nodejs.org</a> 에서 LTS 버전</li>' +
-        '<li><b>열기 도우미</b> 내려받기 — <a href="' + HELPER_REPO + '" target="_blank" rel="noopener">GitHub</a> 의 <code>hwp-opener</code> 폴더</li>' +
+        '<li>아래 <b>“도우미 설치 파일 받기”</b> 버튼으로 <code>hwp-opener.zip</code> 내려받아 압축 풀기</li>' +
         '<li>받은 폴더의 <code>설치.bat</code> 더블클릭 → “설치 완료” 뜨면 끝</li>' +
       '</ol>' +
       '<p class="hg-note">※ Google Drive 데스크톱 앱과 한글 프로그램이 설치돼 있어야 합니다. ' +
       '설치가 어렵거나 원치 않으면, 위쪽 미리보기 화면으로 문서를 그대로 보실 수 있어요.</p>' +
       '<div class="hg-actions">' +
-        '<a class="hg-btn" href="' + HELPER_REPO + '" target="_blank" rel="noopener">도우미 받으러 가기</a>' +
+        '<a class="hg-btn" href="' + HELPER_ZIP + '">도우미 설치 파일 받기</a>' +
         '<button class="hg-close" id="hgClose">닫기</button>' +
       '</div>' +
+      '<p class="hg-src"><a href="' + HELPER_REPO + '" target="_blank" rel="noopener">소스 코드 (GitHub)</a></p>' +
     '</div>';
   document.body.appendChild(ov);
   $('hgClose').addEventListener('click', () => { ov.style.display = 'none'; });

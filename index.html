@@ -37,6 +37,9 @@
     #editor { position: absolute; inset: 0; background: #e5e7eb; }
     #editor iframe { display: block; width: 100%; height: 100%; border: none; }
 
+    /* 뷰어 보호막 — 편집기 위를 덮어 클릭/입력 차단 (문서 열리면 JS가 표시) */
+    #viewerGuard { position: absolute; inset: 0; z-index: 4; display: none; background: transparent; cursor: default; }
+
     /* 디버그 로그창 (평소 숨김 — 주소에 ?debug=1 일 때만 표시) */
     #log {
       display: none;
@@ -83,6 +86,8 @@
 
   <div style="position:relative; flex:1 1 auto; min-height:0;">
     <div id="editor"></div>
+    <!-- 뷰어 모드: 편집기 위 투명막 — 클릭·텍스트 입력 차단(편집 방지), 보기만 허용 -->
+    <div id="viewerGuard" title="보기 전용입니다. 편집은 '한글로 편집'을 이용하세요."></div>
     <div id="welcome">
       <div class="card">
         <h2>한글(HWP) 문서 뷰어</h2>

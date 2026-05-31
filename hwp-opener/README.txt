@@ -5,7 +5,9 @@
 한글(HWP) 프로그램으로 바로 열어줍니다. (다운로드 없이 드라이브 원본을 편집)
 
 [준비물] — 보통 이미 다 있습니다
-- Node.js (https://nodejs.org/ko 에서 LTS)
+- Node.js — 최신 LTS 권장 (https://nodejs.org/ko)
+  ※ 파일 위치를 찾는 데 Node 내장 기능을 써서 v22.13 이상이 필요합니다.
+    오래된 Node가 깔려 있으면 위 사이트에서 LTS로 업데이트하세요.
 - Google Drive 데스크톱 앱 (드라이브 문자 G:/H: 무엇이든 자동 인식)
 - 한글(HWP) 프로그램
 

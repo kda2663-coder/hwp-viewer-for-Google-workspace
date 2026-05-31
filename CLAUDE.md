@@ -31,7 +31,7 @@
 - **로컬 도우미**(`hwp-opener/`): Node 로컬 서버. "한글로 편집" → 드라이브 데스크톱 경로의 원본을 PC 한글로 실행. **본인/파워유저용**(node 필요).
 - 엔진: `@rhwp/editor@0.7.13` (MIT), esm.sh CDN 임베드. 빌드 없음.
 - 배포: Firebase Hosting(무료) → https://hwp-drive-sync.web.app
-- 권한(scope): `drive.readonly` (뷰어, 읽기 전용)
+- 권한(scope): `drive.file` (앱으로 연 파일만 접근. readonly는 제한범위→보안평가·매년재인증 부담이라 폐기. 2026-05-31 확정)
 
 ## 방향성 (결정됨)
 - **상품 = 뷰어** (무설치, 모두 대상). 마켓플레이스(A) 우선 — 모바일도 됨.

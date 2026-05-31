@@ -1,5 +1,9 @@
 # 개인 기록 (이메일 등 개인정보 포함) — 공개 저장소에 올리지 않음
 SETUP.md
+# 비공개 운영 메모 (docs/_private_*.md 는 공개 금지)
+_private*.md
+**/_private*.md
+docs/_private*.md
 
 # 로그·임시 파일
 *.log

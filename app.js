@@ -10,7 +10,7 @@ const CONFIG = {
   CLIENT_ID: '442438589836-5eqnquabmics5sbim9fnf5dqu2cjl3hv.apps.googleusercontent.com',
   API_KEY: 'AIzaSyBcqOIvVquz0EMGzGVc7bxtWOlY-Rzx8f0',  // Picker용 (Google Picker API로 제한됨)
   APP_ID: '442438589836', // 프로젝트 번호 (클라이언트 ID 앞부분) — Picker가 고른 파일을 우리 앱에 연결하는 데 필요
-  SCOPE: 'https://www.googleapis.com/auth/drive.readonly', // 뷰어: 볼 수 있는 파일 읽기 전용
+  SCOPE: 'https://www.googleapis.com/auth/drive.file', // 뷰어: 이 앱으로 연 파일만 (제한범위 아님 → 보안평가 면제)
 };
 // ───────────────────────────────────────────────────────────
 
@@ -322,11 +322,12 @@ async function copyEditPath() {
   if (!currentFile.driveId) { setStatus('드라이브에서 연 파일만 한글로 편집할 수 있어요', true); return; }
   try {
     setStatus('한글 프로그램으로 여는 중…', true);
-    const rel = await buildRelPath(currentFile.driveId);  // 드라이브 루트 이후 상대경로
-    log('상대경로: ' + rel);
+    // fileId만 넘기면 도우미가 PC의 Drive 메타DB에서 파일 위치를 찾아 한글로 연다.
+    // (부모폴더를 드라이브 API로 읽지 않으므로 drive.file 권한과 호환)
+    log('fileId 전달: ' + currentFile.driveId);
     let r;
     try {
-      r = await fetch(HELPER_URL + '/open?rel=' + encodeURIComponent(rel), { mode: 'cors' });
+      r = await fetch(HELPER_URL + '/openById?fileId=' + encodeURIComponent(currentFile.driveId), { mode: 'cors' });
     } catch (_) {
       showHelperGuide();   // 도우미 미실행 → 설치 안내 카드
       return;
@@ -471,7 +472,7 @@ function showDriveOpenPrompt(fileId) {
   // 데모 모드: ?demo=1 — 서버의 테스트 hwp 파일 자동 로드 (스크린샷용)
   if (params.get('demo') === '1') {
     try {
-      const resp = await fetch('./sample.hwp');
+      const resp = await fetch('./demo.hwp');
       const buf = await resp.arrayBuffer();
       await loadBytes(new Uint8Array(buf), '샘플문서.hwp');
     } catch (err) {

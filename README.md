@@ -41,7 +41,7 @@ PC 한글 프로그램으로 원본을 바로 편집하고 싶을 때만.
 
 ## 기술 메모
 - 엔진: [`@rhwp/editor`](https://www.npmjs.com/package/@rhwp/editor) (MIT) — esm.sh CDN으로 임베드, 별도 빌드 없음
-- 권한: `drive.readonly` (읽기 전용 뷰어)
+- 권한: `drive.file` (앱으로 연 파일만 접근하는 뷰어)
 - 호스팅: Firebase Hosting
 
 ## 라이선스 / 고지

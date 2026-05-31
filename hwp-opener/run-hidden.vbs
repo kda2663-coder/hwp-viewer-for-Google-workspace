@@ -2,4 +2,4 @@
 ' 자기 위치를 런타임에 OS가 찾으므로 한글 경로에서도 안전하다.
 Dim here
 here = Left(WScript.ScriptFullName, InStrRev(WScript.ScriptFullName, "\"))
-CreateObject("WScript.Shell").Run "node """ & here & "server.js""", 0, False
+CreateObject("WScript.Shell").Run "node --experimental-sqlite --no-warnings """ & here & "server.js""", 0, False

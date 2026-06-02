@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HWP Viewer for Google Workspace™</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-256.png" />
+  <!-- 구글 로그인(OAuth) 라이브러리 -->
+  <script src="https://accounts.google.com/gsi/client" async></script>
+  <!-- 구글 드라이브 파일 선택창(Picker) 라이브러리 -->
+  <script src="https://apis.google.com/js/api.js" async></script>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; font-family: "맑은 고딕", "Malgun Gothic", system-ui, sans-serif; }
+    body { display: flex; flex-direction: column; }
+
+    /* 상단 툴바 */
+    #toolbar {
+      flex: 0 0 auto;
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 14px;
+      background: #1f2937; color: #fff;
+      box-shadow: 0 1px 4px rgba(0,0,0,.2);
+    }
+    #toolbar .title { font-weight: 700; font-size: 15px; margin-right: 8px; }
+    #toolbar .spacer { flex: 1; }
+    #toolbar button {
+      border: none; border-radius: 6px; padding: 7px 12px;
+      font-size: 13px; cursor: pointer; background: #374151; color: #fff;
+    }
+    #toolbar button:hover { background: #4b5563; }
+    #toolbar button.primary { background: #2563eb; }
+    #toolbar button.primary:hover { background: #1d4ed8; }
+    #toolbar button:disabled { opacity: .45; cursor: default; }
+    #fileName { font-size: 12px; color: #cbd5e1; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #viewerNote { display: none; font-size: 11px; color: #93c5fd; margin-left: 10px; padding: 3px 8px; border: 1px solid #374151; border-radius: 999px; white-space: nowrap; }
+    #viewerNote b { color: #cbd5e1; font-weight: 600; }
+
+    /* 편집기 영역 — 컨테이너를 꽉 채움 */
+    #editor { position: absolute; inset: 0; background: #e5e7eb; }
+    #editor iframe { display: block; width: 100%; height: 100%; border: none; }
+
+    /* 뷰어 보호막 — 편집기 위를 덮어 클릭/입력 차단 (문서 열리면 JS가 표시) */
+    #viewerGuard { position: absolute; inset: 0; z-index: 4; display: none; background: transparent; cursor: default; }
+
+    /* 디버그 로그창 (평소 숨김 — 주소에 ?debug=1 일 때만 표시) */
+    #log {
+      display: none;
+      position: fixed; right: 10px; bottom: 10px; width: 380px; max-height: 240px;
+      overflow: auto; background: rgba(17,24,39,.95); color: #d1fae5;
+      font: 11px/1.5 ui-monospace, Consolas, monospace; padding: 8px 10px;
+      border-radius: 8px; z-index: 50; box-shadow: 0 4px 16px rgba(0,0,0,.3);
+      white-space: pre-wrap; word-break: break-all;
+    }
+    #log .err { color: #fca5a5; }
+    #log .hd { color: #93c5fd; font-weight: 700; margin-bottom: 4px; }
+
+    /* 상태 토스트 */
+    #status {
+      position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
+      background: rgba(17,24,39,.92); color: #fff; padding: 9px 16px;
+      border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity .2s;
+      pointer-events: none; max-width: 80vw;
+    }
+    #status.show { opacity: 1; }
+
+    /* 처음 안내 오버레이 */
+    #welcome {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      background: #e5e7eb; z-index: 5;
+    }
+    #welcome .card {
+      background: #fff; border-radius: 12px; padding: 28px 32px; max-width: 440px;
+      box-shadow: 0 6px 24px rgba(0,0,0,.12); text-align: center;
+    }
+    #welcome h2 { margin: 0 0 6px; font-size: 18px; }
+    #welcome p { margin: 6px 0 18px; color: #6b7280; font-size: 13px; line-height: 1.6; }
+
+    /* 로컬 편집 도우미 설치 안내 카드 */
+    #helperGuide {
+      position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center;
+      background: rgba(17,24,39,.55);
+    }
+    #helperGuide .hg-card {
+      background: #fff; color: #1f2937; border-radius: 14px; padding: 26px 28px; max-width: 440px;
+      box-shadow: 0 10px 40px rgba(0,0,0,.25); line-height: 1.6;
+    }
+    #helperGuide h2 { margin: 0 0 10px; font-size: 18px; }
+    #helperGuide p { margin: 8px 0; font-size: 13px; color: #374151; }
+    #helperGuide ol { margin: 12px 0; padding-left: 20px; font-size: 13px; }
+    #helperGuide li { margin: 7px 0; }
+    #helperGuide a { color: #2563eb; }
+    #helperGuide code { background: #f3f4f6; padding: 1px 6px; border-radius: 4px; font-size: 12px; }
+    #helperGuide .hg-note { font-size: 12px; color: #6b7280; background: #f9fafb; padding: 10px 12px; border-radius: 8px; }
+    #helperGuide .hg-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
+    #helperGuide .hg-btn { background: #2563eb; color: #fff; text-decoration: none; padding: 9px 16px; border-radius: 8px; font-size: 13px; }
+    #helperGuide .hg-close { background: #e5e7eb; color: #374151; border: none; padding: 9px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+    #helperGuide .hg-src { margin: 12px 0 0; text-align: center; font-size: 11px; }
+    #helperGuide .hg-src a { color: #9ca3af; }
+  </style>
+</head>
+<body>
+  <div id="toolbar">
+    <span class="title">📄 HWP Viewer <small style="opacity:.6">for Google Workspace™</small></span>
+    <button id="btnOpenDrive">드라이브에서 열기</button>
+    <button id="btnOpenLocal">내 PC 파일 열기</button>
+    <span id="fileName"></span>
+    <span id="viewerNote">미리보기 · 편집은 <b>한글로 편집</b></span>
+    <span class="spacer"></span>
+    <button id="btnEditHwp" class="primary" disabled style="display:none" title="이 문서를 PC의 한글 프로그램으로 엽니다 (Node.js + 열기 도우미 필요, 드라이브 파일만)">📝 한글로 편집</button>
+  </div>
+
+  <div style="position:relative; flex:1 1 auto; min-height:0;">
+    <div id="editor"></div>
+    <!-- 뷰어 모드: 편집기 위 투명막 — 클릭·텍스트 입력 차단(편집 방지), 보기만 허용 -->
+    <div id="viewerGuard" title="보기 전용입니다. 편집은 '한글로 편집'을 이용하세요."></div>
+    <div id="welcome">
+      <div class="card">
+        <h2>한글(HWP) 문서 뷰어</h2>
+        <p>
+          Google Drive™의 HWP/HWPX 파일을 브라우저에서 바로 열어 봅니다.<br />
+          <b>"드라이브에서 열기"</b>로 파일을 선택하거나,<br />
+          <b>"내 PC 파일 열기"</b>로 로컬 파일을 바로 볼 수 있습니다.
+        </p>
+        <button id="btnOpenLocal2" class="primary"
+                style="border:none;border-radius:6px;padding:9px 16px;background:#2563eb;color:#fff;cursor:pointer;font-size:14px;">
+          내 PC 파일 열기
+        </button>
+        <p style="margin:14px 0 0;font-size:10px;color:#9ca3af;line-height:1.5;">
+          Google Workspace™ and Google Drive™ are trademarks of Google LLC.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 숨은 파일 선택 input -->
+  <input type="file" id="fileInput" accept=".hwp,.hwpx" style="display:none" />
+
+  <div id="status"></div>
+  <div id="log"><div class="hd">진단 로그</div></div>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

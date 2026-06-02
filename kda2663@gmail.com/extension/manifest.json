@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "HWP Viewer for Google Workspace",
+  "version": "0.2.0",
+  "description": "구글 드라이브의 한글(HWP/HWPX) 문서를 브라우저에서 바로 열어 봅니다.",
+  "content_scripts": [
+    {
+      "matches": ["https://drive.google.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_title": "HWP Viewer for Google Workspace"
+  }
+}

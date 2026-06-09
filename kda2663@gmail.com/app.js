@@ -10,7 +10,7 @@ const CONFIG = {
   CLIENT_ID: '442438589836-5eqnquabmics5sbim9fnf5dqu2cjl3hv.apps.googleusercontent.com',
   API_KEY: 'AIzaSyBcqOIvVquz0EMGzGVc7bxtWOlY-Rzx8f0',  // Picker용 (Google Picker API로 제한됨)
   APP_ID: '442438589836', // 프로젝트 번호 (클라이언트 ID 앞부분) — Picker가 고른 파일을 우리 앱에 연결하는 데 필요
-  SCOPE: 'https://www.googleapis.com/auth/drive.readonly', // 뷰어: 폴더 구조를 파악해 절대경로를 만들기 위해 readonly 사용
+  SCOPE: 'https://www.googleapis.com/auth/drive.file', // 뷰어: 이 앱으로 연 파일만 (제한범위 아님 → 보안평가 면제)
 };
 // ───────────────────────────────────────────────────────────
 
@@ -322,13 +322,12 @@ async function copyEditPath() {
   if (!currentFile.driveId) { setStatus('드라이브에서 연 파일만 한글로 편집할 수 있어요', true); return; }
   try {
     setStatus('한글 프로그램으로 여는 중…', true);
-    // 웹앱에서 드라이브 API로 전체 상대경로를 조립한 뒤 로컬에 던져줌
-    log('전체 경로 조립 중: ' + currentFile.driveId);
+    // fileId만 넘기면 도우미가 PC의 Drive 메타DB에서 파일 위치를 찾아 한글로 연다.
+    // (부모폴더를 드라이브 API로 읽지 않으므로 drive.file 권한과 호환)
+    log('fileId 전달: ' + currentFile.driveId);
     let r;
     try {
-      const relPath = await buildRelPath(currentFile.driveId);
-      log('조립된 경로: ' + relPath);
-      r = await fetch(HELPER_URL + '/open?rel=' + encodeURIComponent(relPath), { mode: 'cors' });
+      r = await fetch(HELPER_URL + '/openById?fileId=' + encodeURIComponent(currentFile.driveId), { mode: 'cors' });
     } catch (_) {
       showHelperGuide();   // 도우미 미실행 → 설치 안내 카드
       return;
